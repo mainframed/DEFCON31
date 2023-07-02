@@ -5,6 +5,83 @@ ENDCOLOR="\e[0m"
 GREEN="\e[32m"
 BOLDGREEN="\e[1;${GREEN}m"
 
+function clean_docker {
+    echo "[+] Listing containers..."
+    containers=$(docker ps -qa)
+    echo "[+] containers: $containers"
+
+    if [ ! -z "$containers" ]
+    then
+        echo "[+] Stopping containers..."
+        docker stop $containers
+        echo "[+] Removing containers..."
+        docker rm $containers
+    else
+        echo "No containers found"
+    fi
+
+    echo "[+] Listing images..."
+    images=$(docker images -qa)
+    echo "[+] images: $images"
+
+    if [ ! -z "$images" ]
+    then
+        echo "[+] Removing images..."
+        docker rmi -f $images
+    else
+        echo "No images found"
+    fi
+
+    echo "[+] Listing volumes..."
+    volumes=$(docker volume ls -q)
+    echo "[+] volumes: $volumes"
+
+    if [ ! -z "$volumes" ]
+    then
+        echo "[+] Removing volumes..."
+        docker volume rm $volumes
+    else
+        echo "[+] No volumes found"
+    fi
+
+    echo "[+] Listing networks..."
+    networks=$(docker network ls -q)
+    echo "[+] networks: $networks"
+
+    if [ ! -z "$networks" ]
+    then
+        echo "[+] Removing networks..."
+        docker network rm $networks
+    else
+        echo "[+] No networks found"
+    fi
+
+    echo "[+] These should not output any items:"
+    docker ps -a
+    docker images -a 
+    docker volume ls
+
+    echo "[+] This should only show the default networks:"
+    docker network ls
+}
+
+
+if [ $1 = "-clean" ] ; then
+    echo "${RED} WARNING THIS WILL DELETE THE ~/Labs folder," 
+    echo "remove all containers, and delete command history"
+    echo "Are you sure you want to continue?"
+    read -p "Continue? [yes/NO] : " continue
+    case $continue in
+        [Yy]* ) 
+        rm -rf ~/Labs
+        history -c && history -w
+        clean_docker
+        ;;
+        [Nn]* ) exit;;
+        * ) exit;;
+    esac
+    rm -rf ~/Labs/
+fi
 clear
 echo -e "${RED}"
 echo ''; echo ''
@@ -40,4 +117,5 @@ else
     echo "${RED}ERROR ERROR ERROR"
     echo " Talk to the instructor about this error"
     echo "ERROR ERROR ERROR"
+fi
 echo "${ENDCOLOR}"
