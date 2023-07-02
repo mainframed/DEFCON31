@@ -105,12 +105,12 @@ echo "[+] Cloning Nmap"
 echo "[+] Restarting docker containers"
 docker kill defcon31 &>/dev/null
 docker rm defcon31 &>/dev/null
-wget -O ~Labs/dummy_client.py "https://raw.githubusercontent.com/mainframed/DEFCON31/main/dummy_client.py"
+wget -O ~/Labs/dummy_client.py "https://raw.githubusercontent.com/mainframed/DEFCON31/main/dummy_client.py"
 ARCH=$(dpkg --print-architecture)
 if [ "$ARCH" = "amd64" ]; then
     wget -O ~/Labs/client "https://github.com/mainframed/DEFCON31/raw/main/client_amd64" 
     docker run -d --name defcon31 -p 127.0.0.1:1234:1234 -p 127.0.0.1:31337:31337 mainframed767/defcon31:amd64
-elif [ "$ARCH" = "arm64" ]
+elif [ "$ARCH" = "arm64" ]; then
     wget -O ~/Labs/client "https://github.com/mainframed/DEFCON31/raw/main/client_arm64" 
     docker run -d --name defcon31 -p 127.0.0.1:1234:1234 -p 127.0.0.1:31337:31337 mainframed767/defcon31:arm64
 else
