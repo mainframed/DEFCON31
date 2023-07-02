@@ -47,7 +47,7 @@ def Main():
     # We're connected at this point
 
     while True:
-        send_input = input("Enter command: ")
+        send_input = input("Enter command (type EXIT to quit): ")
         if send_input.upper() == "EXIT":
             print("Disconnecting")
             sys.exit(0)
