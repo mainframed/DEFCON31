@@ -5,9 +5,31 @@ import subprocess
 
 
 debug = False
-port_num = 31337
+port_num = 32337
 INIT = "MESSWITHTHEBEST"
 RESPONSE = b'DIELIKETHEREST'
+
+SHOWS = {
+    "0063": "America First Episode 1",
+    "0064": "America First Episode 2",
+    "0065": "America First Episode 3",
+    "0066": "America First Episode 4",
+    "0067": "America First Episode 5",
+    "0067": "America First Episode 6",
+    "0068" : "Fishing With Eddie Episode 1",
+    "0069" : "Fishing With Eddie Episode 2",
+    "0070" : "Fishing With Eddie Episode 3",
+    "0071" : "Fishing With Eddie Episode 4",
+    "0072" : "Fishing With Eddie Episode 5",
+    "0073" : "Fishing With Eddie Episode 6",
+    "0074" : "The Outer Limits 104",
+    "0075" : "The Outer Limits 105",
+    "0076" : "The Outer Limits 106",
+    "0077" : "The Outer Limits 107",
+    "0078" : "The Outer Limits 108",
+    "0079" : "Up Your Garden Seed Pilot",
+    "0080" : "My House Mystery",
+}
 
 COMMANDS = [
     "ADDUSER",
@@ -19,21 +41,27 @@ COMMANDS = [
     "MOTD", 
     "SHELLCMD", 
     "VERSION",  
+    "PLAYING",
+    "LISTSHOWS",
+    "CHANGESHOW",
 ]
 
 COMMANDS_DICT = {
-    "ADDUSER" : "Adds a user, syntax ADDUSER username/password ADMIN. Admin is optional, only append for ADMIN users. ADMIN only." ,
-    "COMMANDS": "This output",
-    "DELUSER" : "Deletes a user, syntax DELUSER username. ADMIN only.",
-    "HELP" : "A help dialog", 
-    "LISTUSERS": "Lists all users and if they have ADMIN rights. For ADMIN users passwords are also listed.", 
-    "LOGON" : "Logs on a user, syntax LOGON username/password",
-    "MOTD" : "Prints the message of the day", 
-    "SHELLCMD" : "Issues a shell command. Syntax e.g. SHELLCMD ls -al", 
-    "VERSION" : "Prints the DC31 Software version",  
+    "ADDUSER"    : "Adds a user, syntax ADDUSER username/password ADMIN. Admin is optional, only append for ADMIN users. ADMIN only." ,
+    "COMMANDS"   : "This output",
+    "CHANGESHOW" : "Changes the currently playing show",
+    "DELUSER"    : "Deletes a user, syntax DELUSER username. ADMIN only.",
+    "HELP"       : "A help dialog", 
+    "LISTSHOWS"  : "Lists available show tapes",
+    "LISTUSERS"  : "Lists all users and if they have ADMIN rights. For ADMIN users passwords are also listed.", 
+    "LOGON"      : "Logs on a user, syntax LOGON username/password",
+    "MOTD"       : "Prints the message of the day", 
+    "PLAYING"    : "Prints currently playing episode",
+    "SHELLCMD"   : "Issues a shell command. Syntax e.g. SHELLCMD ls -al", 
+    "VERSION"    : "Prints the DC31 Software version",  
 }
 
-WART = '''
+WART_OLD = '''
      _____                                                        
  __ |__  _|   ______  ____    ______  ____   ____    __  ______  
 |  \/  \|  | |   ___||    |  |   ___|/     \|    \  /  ||   ___| 
@@ -45,18 +73,50 @@ WARNING:  Unauthorized access to this system is forbidden and will be
 prosecuted by law. By accessing this system, you agree that your actions
 may be monitored if unauthorized usage is suspected.  
 
-For user help use the documentation at X
+For user help use the documentation at defcon31.soldieroffortr
                                                                   
 '''
 
-HELP = '''This is the DC31 fake server 9000. With the official client you can connect,\n Use the LOGON command to administer the system. For a list of commands type 'COMMANDS' '''
+WART= '''ENTERING ARPS 331
+     _____   _____   __ __ 
+    |     | |_   _| |  |  |
+    |  |  |   | |   |  |  |
+    |_____|   |_|    \___/ 
+                   
+       _
+      / \\
+     / _ \    utomated          -----------------------------------------
+    / ___ \                     -                                       -
+  _/ /   \ \_                   - WARNING WARNING WARNING WARNING WARNI -
+ |____|_|____|                  - NG WARNING WARNING WARNING WARNING WA -
+   ______                       -                                       -
+  |_   __ \                     -                                       -
+    | |__) |                    -   This systems is currently:          -
+    |  __ /   ecording          -                 ON-AIR                -
+   _| |  \ \_                   -                                       -
+  |____|_|___|                  -          Make changes to              -
+   ______                       -          the Schedule first.          -
+  |_   __ \                     -                                       -
+    | |__) |  layback           -          Only Use this System         -
+    |  ___/                     -          for EMERGENCIES              -
+   _| |_                        -                                       -
+  |_____|_                      -                                       -
+    _____                       -                                       -
+  .' ____ \                     - RNING WARNING WARNING WARNING WARNING -
+  | (___ \_|                    - WARNING WARNING WARNING WARNING WARN  -
+   _.____`.  ystem              -                                       -
+  | \____) |                    -----------------------------------------
+   \______.'
+'''
 
-MOTD = "Today is August 9th, 2023. This system will be going down for maintenence August 10th, 2023."
+HELP = '''\nWelcome to the ARPS system 2000. This is a modern tape management system for todays fast paced television networks.\n Use the LOGON command to administer the system. For a list of commands type 'COMMANDS'.\n\nTo view the currently playing show type 'PLAYING'\n '''
+
+MOTD = "\nThis machine is ON AIR. \n    Do NOT Touch\n\nToday is August 9th, 2023. This system will be going down for maintenence August 10th, 2023."
 
 rand_default = [randrange(40),randrange(40),randrange(40),randrange(40),randrange(40)]
 
 
-VERSION = "DEFCON Server v1.33.7"
+VERSION = "ARPS Server v1.33.7"
 LOGON = WART
 
 class ThreadedServer(object):
@@ -163,6 +223,7 @@ class ThreadedServer(object):
         seq = 1
         rseq = 0
         header = b"\x80"
+        currently_playing = "0067"
         size = 1024
         logged_on = False
         handshaked = False
@@ -320,11 +381,8 @@ class ThreadedServer(object):
                                     args = False
                                     continue
 
-                            if client_input.upper() == "MOTD":
-                                client.send(header+seq.to_bytes()+self.xor(MOTD))
-                                seq +=1
-                                continue
-                            elif client_input.upper() == "COMMANDS":
+                            
+                            if client_input.upper() == "COMMANDS":
                                 
                                 # client.send(header+seq.to_bytes()+self.xor(
                                 #     ' '.join(COMMANDS)
@@ -335,15 +393,50 @@ class ThreadedServer(object):
                                 client.send(header+seq.to_bytes()+self.xor(output))
                                 seq +=1
                                 continue
+                            elif client_input.upper() == "CHANGESHOW":
+
+                                if not args:
+                                    client.send(header+seq.to_bytes()+self.xor("CHANGESHOW requires a show serial"))
+                                    seq +=1
+                                    continue
+                                show_num = args.split()[0]
+                                if show_num not in SHOWS:
+                                    client.send(header+seq.to_bytes()+self.xor("Show number {} not found".format(show_num)))
+                                    seq +=1
+                                    continue
+                                currently_playing = show_num
+
+                                client.send(header+seq.to_bytes()+self.xor("Show changed to {} - {}".format(show_num,SHOWS[currently_playing])))
+                                seq +=1
+                                continue
+
 
                         # You dont need to be logged in for these
-                        if client_input.upper() == "VERSION":
+                        if client_input.upper() == "MOTD":
+                            client.send(header+seq.to_bytes()+self.xor(MOTD))
+                            seq +=1
+                            continue
+                        elif client_input.upper() == "VERSION":
                             #sending version string
                             client.send(header+seq.to_bytes()+self.xor(VERSION))
                             seq +=1
                             continue
                         elif client_input.upper() == "HELP":
                             client.send(header+seq.to_bytes()+self.xor(HELP))
+                            seq +=1
+                            continue
+                        elif client_input.upper() == "PLAYING":
+                            client.send(header+seq.to_bytes()+self.xor("{} - {}".format(currently_playing,SHOWS[currently_playing])))
+                            seq +=1
+                            continue
+                        elif client_input.upper() == "LISTSHOWS":
+                            showlist =  '+--------+------------------------------+\n'
+                            showlist += '| Serial | Title                        |\n'
+                            showlist += '+--------+------------------------------+\n'
+                            for i in SHOWS:
+                                showlist += '| {i:<7}| {t:<29}|\n'.format(i=i,t=SHOWS[i])
+                            showlist += '+--------+------------------------------+\n'
+                            client.send(header+seq.to_bytes()+self.xor(showlist))
                             seq +=1
                             continue
                         elif client_input.upper() == "LOGON":
