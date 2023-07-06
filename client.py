@@ -40,7 +40,7 @@ def Main():
    # print("Sending", RESPONSE)
     seq += 1
     s.send(HEADER+seq.to_bytes(length=1, byteorder='big')+xor(RESPONSE))
-    d = bytearray(s.recv(1024))
+    d = bytearray(s.recv(9046))
     seq = d[1]
     re = rexor(bytes(d[2:]))
     print(re.decode())
