@@ -67,20 +67,21 @@ function clean_docker {
 
 
 if [ $1 = "-clean" ] ; then
-    echo "${RED} WARNING THIS WILL DELETE THE ~/Labs folder," 
+    echo -e "${RED} WARNING THIS WILL DELETE THE ~/Labs folder," 
     echo "remove all containers, and delete command history"
     echo "Are you sure you want to continue?"
     read -p "Continue? [yes/NO] : " continue
     case $continue in
         [Yy]* ) 
         rm -rf ~/Labs
-        history -c && history -w
+        history -c
+        history -w
         clean_docker
+        exit
         ;;
         [Nn]* ) exit;;
         * ) exit;;
     esac
-    rm -rf ~/Labs/
 fi
 clear
 echo -e "${RED}"
@@ -118,4 +119,4 @@ else
     echo " Talk to the instructor about this error"
     echo "ERROR ERROR ERROR"
 fi
-echo "${ENDCOLOR}"
+echo -e "${ENDCOLOR}"
