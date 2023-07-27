@@ -2,7 +2,7 @@ DC31 README
 ===========
 
 Welcome to the DC31 Protocol documentation. This Protocol was developed
-for the use in brain implants. Access should be heavily protected. 
+to control the ARPS automatic tape system. 
 
 Protocol
 --------
