@@ -5,7 +5,7 @@ import subprocess
 
 
 debug = False
-port_num = 32337
+port_num = 31337
 INIT = "MESSWITHTHEBEST"
 RESPONSE = b'DIELIKETHEREST'
 
