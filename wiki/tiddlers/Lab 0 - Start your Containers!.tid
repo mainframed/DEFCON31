@@ -10,5 +10,5 @@ Before we get started you need to have a copy of the class VM (or a suitable lin
 # Open a terminal (pressing the windows key or the apple command key will bring up a search where you can type 'terminal' or just click on the terminal icon at the bottom of the screen)
 # Make sure you're in your home folder: `cd ~`
 # Your genius instructor forgot to inlclude some changes to the runme script, so run this first:
-## Download a newer copy of the runme script: `wget -O https://raw.githubusercontent.com/mainframed/DEFCON31/main/runme_first.sh`
+## Download a newer copy of the runme script: `wget -O runme_first.sh https://raw.githubusercontent.com/mainframed/DEFCON31/main/runme_first.sh`
 # Run the run me script to download the necessary stuff for class: `./runme_first.sh`
