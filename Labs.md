@@ -41,19 +41,18 @@ We're working in the `nmap` folder. If you want to make the changes global, on s
 
 # Lab 4 - Simple Probe Script Update
 
-*Purpose* 
+''Purpose'' 
 
 In this lab you'll learn that Nmap scripts can change the results of a probe or augment changes. 
 
 We haven't introduced how the scripts work just yet. 
 
-*Steps*
+''Steps''
 
 # In a terminal make sure you're in the `~/Labs` folder
 # Create a new script file called `lab4.nse`: `touch lab4.nse`
 # Open this file in VS Code (or an editor of your choice): `code lab4.nse`
-# Paste the script below:
-
+# Paste the script below:<span>
 ```lua
 local stdnse = require "stdnse"
 local shortport = require "shortport"
@@ -148,7 +147,7 @@ action = function(host, port)
   return
 end
 ```
-
+</span>
 # Save the script
 # In the terminal run an nmap scan: `./nmap/nmap -p 1234 localhost -sV` (notice the ouput)
 # In the terminal run an nmap scan: `./nmap/nmap -p 1234 localhost --script defcon31`
@@ -273,8 +272,7 @@ Here's also a list of commands you may or may not be able to run without logging
 
 # Lab 8 
 
-# Go to https://defcon31.soldieroffortran.org/arps_protocol.pdf or go to the section of
-the class Wiki that explains the protocol: LINK
+# Go to https://defcon31.soldieroffortran.org/arps_protocol.pdf or go to the section of the class Wiki that explains the protocol: LINK
 # Read the spec and take note of the initial packets sent
 # By reading the spec we know the following:
  - Each packet of information starts with 0x80
