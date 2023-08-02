@@ -1,0 +1,139 @@
+created: 20230802034749763
+modified: 20230802040555394
+tags: 
+title: Lab 14 - Enumerate all the Users
+
+! Purpose
+
+Using Nmap and our new ARPS library we can enumerate all the active accounts
+
+! Steps
+
+First we need to enumerate the entire user space. With our new library this becomes fairly trivial. What do we need to do this? Users are made up of @ + two alphanumeric characters, so we're going to use a LUA iterator!
+
+# Create the file `arps-enum.nse` and edit it with VS Code
+# Place the following at the top of the file:<span>
+
+```lua
+-- Script to enumerate all users
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+<add the arps library here>
+
+portrule = shortport.port_or_service(31337, "arps")
+```
+</span>
+# Make sure you replace `<add the arps library here>` with the library
+# Next, for the class I've created an iterator that will loop through every valid user ID type, iterators are a little complex for the class but basically return a value each time the function is called, add this to the script:<span>
+
+```lua
+-- User Iterator
+user_iter = function ()
+    local a = "abcdefghijklmnopqrstuvwxyz0123456789"
+    local i = 1
+    local j = 0
+    return function ()
+             if j >= #a then 
+              j = 0 
+              i = i + 1
+            end
+             j = j + 1
+             if i <= #a then return "@" .. string.sub(a,i,i) .. string.sub(a,j,j) end
+           end
+  end
+```
+</span>
+# Finally, create the action section of the script:<span>
+
+```lua
+action = function(host, port)
+
+end
+```
+</span>
+That's a pretty empty action section! You need to fill it in!
+
+# You'll need a new arps object, a results table and a valid users table:<span>
+
+```lua
+local results = stdnse.output_table()
+local valid_users = {}
+local arps_o = <a new arps object>
+local status, err = <arps initiate>
+```
+</span>
+
+make sure you fill in the missing pieces!
+
+With that done we can do our loop
+
+```lua
+for user in <iterator function above> do
+  -- Clever students may have realized what happens when the sequence is above 255
+  -- We just need to disconnect and reconnect
+  if arps_o.seq > 250 then 
+    arps_o:disconnect()
+    status, err = arps_o:initiate(host,port)
+  end
+```
+
+next we do our check to see if the user is a valid user or not
+
+```lua
+if arps_o:<logon function with user and a fake password> == "Invalid PASSWORD" then
+  table.insert(valid_users,user)
+end
+```
+
+lastly we tell nmap the results
+
+```lua
+results["Valid Users"] = valid_users
+return results
+```
+
+With all that done your script should look something like this (if you just skipped ahead here, tsk tsk)
+
+```lua
+-- Script to enumerate all users
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+local arps = require "arps"
+
+portrule = shortport.port_or_service(31337, "arps")
+
+-- User Iterator
+user_iter = function ()
+    local a = "abcdefghijklmnopqrstuvwxyz0123456789"
+    local i = 1
+    local j = 0
+    return function ()
+             if j >= #a then 
+              j = 0 
+              i = i + 1
+            end
+             j = j + 1
+             if i <= #a then return "@" .. string.sub(a,i,i) .. string.sub(a,j,j) end
+           end
+  end
+
+action = function(host, port)
+    local results = stdnse.output_table()
+    local valid_users = {}
+    arps_o = arps.ARPS:new()
+    local status, err = arps_o:initiate(host,port)
+    for user in user_iter() do
+        if arps_o.seq > 250 then 
+            arps_o:disconnect()
+            status, err = arps_o:initiate(host,port)
+        end
+        if arps_o:logon(user,"fake") == "Invalid PASSWORD" then
+            table.insert(valid_users,user)
+        end
+    end
+    results["Valid Users"] = valid_users 
+    return results
+end
+```
+
+Finally, we can run this script and see all the valid users that exist: `./nmap/nmap -p 31337 localhost --script arps-enum`

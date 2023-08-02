@@ -1,0 +1,41 @@
+created: 20230802004936877
+modified: 20230802032554078
+tags: 
+title: Lab 5 - Lua Scriptin'
+
+! Purpose
+
+To learn a little bit about the LUA scripting language
+
+! Steps
+
+# In a terminal make sure you're in the `~/Labs` folder
+# Create a new script file called `defcon31.lua`: `touch defcon31.lua`
+# Open this file in VS Code (or an editor of your choice): `code defcon31.lua`
+# Put the following in your script: `print("Hello DEFCON 31")`
+# Save the script and run it in the terminal: `lua defcon31.lua`
+# In the script add the following on a new line: `str = "I'm so tired... oops... Welcome to Class!"`
+# Using the `string.find` and `string.sub` functions only print the last three words of `str`<span>
+
+```lua
+str = "I'm so tired... oops... Welcome to Class!"
+i,j = string.find(str,"Welcome")
+print(string.sub(str,i))
+```
+</span>
+# On a new line add the following `arr = {"talk1","talk2","talk3","talk4","talk5","talk6"}`
+# Edit the lua script to print the 5th element in the array: `print(arr[5])`
+# Using a for loop and an ipair iterator print every element in the array except `talk5` (this last one I'll do for you):<span>
+
+```lua
+arr = {"talk1","talk2","talk3","talk4","talk5","talk6"}
+for i,talk in ipairs(arr) do
+  if talk ~= "talk5" then 
+    print(talk)
+  end
+end
+```
+
+! Bonus
+
+Change the loop to print the number in the array instead of the value

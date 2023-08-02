@@ -1,0 +1,73 @@
+created: 20230802034425084
+modified: 20230802040540477
+tags: 
+title: Lab 13 - Redoing our Scripts
+
+! Purpose
+
+Now that we have a a new ARPS/DC31 library we can replace our older version and enumeration scripts.
+
+! Steps
+
+
+# Before we proceed lets make a backup: `cp arps-command-enum.nse arps-command-enum.old && cp arps-version.nse arps-version.old`
+# Open `arps-command-enum.nse`: `code arps-command-enum.nse` 
+# Select all and replace it with the following:<span>
+
+```lua
+-- Script to get ARPS version
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+local arps = require "arps"
+
+-- Make sure you fill out someport and someservice properly
+portrule = shortport.port_or_service(31337, "arps")
+
+action = function(host, port)
+
+  stdnse.verbose(1,"Connecting to ARPS service")
+  stdnse.debug(1,"Connecting to ARPS service: " .. host.ip .. ":" .. port.number)
+
+  local results = stdnse.output_table()
+  local arps_commands = {"ADDUSER", "COMMANDS", "DELUSER", "HELP", "LISTUSERS", "LOGON", "MOTD", "SHELLCMD", "VERSION", "PLAYING", "LISTSHOWS", "CHANGESHOW"}
+  local command = stdnse.get_script_args(SCRIPT_NAME .. '.command') or nil
+  if command then arps_commands = {command} end
+  -- Time to use our new ARPS library
+  arps_o = arps.ARPS:new()
+  local status, err = arps_o:initiate(host,port)
+  for i=1, #arps_commands do
+      stdnse.debug(arps_commands[i])
+      results[arps_commands[i]] = arps_o:send_command(arps_commands[i])
+  end
+  arps_o:disconnect()
+  return results
+end
+```
+</span>
+# Next we'll also change the version script: `code arps-version.nse`
+# Select all and replace it with the following:<span>
+
+```lua
+-- Script to get ARPS version
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+local arps = require "arps"
+
+-- Make sure you fill out someport and someservice properly
+portrule = shortport.port_or_service(31337, "arps")
+
+action = function(host, port)
+  arps_o = arps.ARPS:new()
+  local status, err = arps_o:initiate(host,port)
+  local version = string.sub(arps_o:send_command("VERSION"),14)
+  -- Setting the port version
+  port.version.version = version
+  nmap.set_port_version(host,port)
+  arps_o:disconnect()
+  return
+end
+```
+</span>
+# Now we can run both scripts: `./nmap/nmap --script arps-version,arps-command-enum -p 31337 localhost -sV`
+
+Notice how much shorter these scripts are now. 

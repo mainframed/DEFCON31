@@ -1,0 +1,34 @@
+created: 20230802005153679
+modified: 20230802032625405
+tags: 
+title: Lab 6 - Hello World in NSE
+
+! Purpose
+
+We know some lua now, its time to apply what we know and run an nmap script
+
+! Steps
+
+# In the `~/Labs` folder create a new file called `lab6.nse` and place the following in that file:<span>
+
+```lua
+local stdnse = require "stdnse"
+prerule = function()
+    return true
+  end
+action = function(host, port)
+  stdnse.verbose(1,[[Hello World from verbose]])
+  stdnse.debug(1,[[Hello World from debug]])
+  return
+end
+```
+</span>
+# From the terminal (make sure you're in the `~/Labs` folder) run the nmap script: `./nmap/nmap --script lab6 localhost`
+# Notice the verbose output, despite you not passing `-v`, any thoughts on why?
+# To show the debug message, however, we need to turn on debug: `./nmap/nmap --script lab6 localhost -d`
+
+
+! Bonus
+
+stdnse provides multiple functions, if you're done early try checking some of them out and playing with them. https://nmap.org/nsedoc/lib/stdnse.html
+

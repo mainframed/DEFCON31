@@ -1,0 +1,87 @@
+created: 20230802031022374
+modified: 20230802040427376
+tags: 
+title: Lab 9 - ARPS Version Script
+
+''Purpose''
+
+This lab will use what we've learned so far to update the version info in Nmap
+
+''Steps''
+
+# Make sure you're in the `~/Labs` folder
+# copy the lua below and place it in the file `~/Labs/arps-version.nse`<span>
+
+```lua
+-- Script to get ARPS version
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+
+-- Make sure you fill out someport and someservice properly
+portrule = shortport.port_or_service(<someport>, "<someservice>")
+
+action = function(host, port)
+  -- Add a verbose and debug message here letting users know
+  -- The debug/verbose lib is stdnse
+
+  <verbose message>
+  <debug message>
+
+  local sock = nmap.new_socket()
+  local status, err = sock:connect(host, port, "tcp")
+  if not status then
+    stdnse.debug("Error connecting")
+    return false, err
+  end
+
+  status, bytes = sock:receive()
+  if not status then return false, bytes end
+  
+  if bytes == <Initial Handshake> then
+    -- Send handshake response
+    status, err = sock:send(<send some bytes>)
+    if not status then return false, err end
+
+    -- Get the initial screen
+    status, bytes = sock:receive()
+    if not status then return false, bytes end
+    
+    -- Send 'VERSION'
+    status, err = sock:send(<send some bytes>)
+    if not status then return false, err end
+
+    -- Get version info
+    status, bytes = sock:receive()
+    if not status then return false, bytes end
+
+    -- unXOR the version "1.33.7" 
+    local version = string.sub(bytes,16)
+    local v = ''
+    for i=1, #version do
+      local byte = string.byte(version,i)
+      local decrypt = byte ~ 0x31
+      v = v .. string.char(decrypt)
+    end
+
+    -- Setting the port version
+    <Set the port version and then tell nmap about it here>
+  end
+
+  sock:close()
+  return
+end
+```
+</span>
+
+!!! Updating the LUA Script
+
+''Note'': I'm not going to do too much hand holding, try and figure it out first (if you get REALLY stuck take a look at Lab 10 where I share the completed script)
+
+# First replace `<verbose>` and `<debug>` with messages that users can use when they run your script. `stdnse.verbose()` and `stdnse.debug()` are the functions
+# We know that the protocol sends data and expects data in a certain format, we could use wireshark, tcpdump, reading the spec, to figure it all out. I've done the heavy lifting for you here:
+## Initial handshake (in hex): `80017c7462626678657965797473746265`
+## Handshake reply: `80027578747d787a7465797463746265`
+## Request Version info: `800447544342585e5f`
+# We have the handshake in a string, we need to convert it to bytes before we send it (or visa versa if we want to compare). The functions `stdnse.fromhex()` and `stdnse.tohex()` will do that for us. You'll need to use these functions and the hex above. Replacing `<Initial Handshake>` and `<send some bytes>` with `stdnse.tohex("xxx")`/`stdnse.fromhex("xxx")`
+# Finally, we can set the version, replacing `<Set the port version and then tell nmap about it here>`. We need to set the `version.port.port` to `v` and we also need to tell nmap about it with `nmap.set_port_version(host, port)`
+# After making all these changes we can run our nmap script: `./nmap/nmap --script arps-version -p 31337 -sV localhost`

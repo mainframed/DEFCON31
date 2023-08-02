@@ -1,0 +1,9 @@
+created: 20230802004225720
+modified: 20230802004241464
+tags: 
+title: New Tiddler
+
+```lua
+-- test
+print("test")
+```

@@ -1,0 +1,222 @@
+created: 20230802031604690
+modified: 20230802040447364
+tags: 
+title: Lab 10 - ARPS Command Enum
+
+! Purpose
+
+The purpose of this lab is to learn how to enumerate commands, iterate over a loop, return the values in a table and add a script argument. 
+
+! Steps
+
+
+!! Enumerate Commands
+
+The flow of this program is basically the same as the previous lab, except we now loop through each command instead of just the one command (version). 
+ We're also adding in the ability to pass the script an argument.
+
+# Take the completed script from the last lab `arps-version.nse`: <span>
+
+```lua
+-- Script to get ARPS version
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+
+-- Make sure you fill out someport and someservice properly
+portrule = shortport.port_or_service(31337, "arps")
+
+action = function(host, port)
+  -- Add a verbose and debug message here letting users know
+  -- The debug/verbose lib is stdnse
+
+  stdnse.verbose(1,"Connecting to ARPS service")
+  stdnse.debug(1,"Connecting to ARPS service: " .. host.ip .. ":" .. port.number)
+
+  local sock = nmap.new_socket()
+  local status, err = sock:connect(host, port, "tcp")
+  if not status then
+    stdnse.debug("Error connecting")
+    return false, err
+  end
+
+  status, bytes = sock:receive()
+  if not status then return false, bytes end
+  
+  if bytes == stdnse.fromhex("80017c7462626678657965797473746265") then
+    -- Send handshake response
+    status, err = sock:send(stdnse.fromhex("80027578747d787a7465797463746265"))
+    if not status then return false, err end
+
+    -- Get the initial screen
+    status, bytes = sock:receive()
+    if not status then return false, bytes end
+    
+    -- Send 'VERSION'
+    status, err = sock:send(stdnse.fromhex("800447544342585e5f"))
+    if not status then return false, err end
+
+    -- Get version info
+    status, bytes = sock:receive()
+    if not status then return false, bytes end
+
+    -- unXOR the version "1.33.7" 
+    local version = string.sub(bytes,16)
+    local v = ''
+    for i=1, #version do
+      local byte = string.byte(version,i)
+      local decrypt = byte ~ 0x31
+      v = v .. string.char(decrypt)
+    end
+
+    -- Setting the port version
+    port.version.version = v
+    nmap.set_port_version(host,port)
+  end
+
+  sock:close()
+  return
+end
+```
+</span>
+# Copy the `arps-version.nse` script to `arps-command-enum.nse`: `cp arps-version.nse arps-command-enum.nse`
+# Edit `arps-command-enum.nse`: `code arps-command-enum.nse`
+
+!! Editing The Script
+
+First we need to add an array of all the commands:
+
+# In the action section, near the top we need to add the following: `local arps_commands = {"ADDUSER", "COMMANDS", "DELUSER", "HELP", "LISTUSERS", "LOGON", "MOTD", "SHELLCMD", "VERSION", "PLAYING", "LISTSHOWS", "CHANGESHOW"}`
+# We also need to get the script args if they exist, so add this after the arps_commands: `local command = stdnse.get_script_args(SCRIPT_NAME .. '.command') or nil`
+# We then add a quick check to see if we do one command or all: `if command then arps_commands = {command} end`
+# Next we need to add a loop through each command before `local sock = nmap.new_socket()`, this for loop will `end` after `sock:close()`. Add the following: `for i=1, #arps_commands do` (make sure you also add the end).
+
+VS Code tip: You can select a block of code and indent that entire block by pressing tab
+
+Your script should look something like this:
+
+```lua
+action = function(host, port)
+  -- Add a verbose and debug message here letting users know
+  -- The debug/verbose lib is stdnse
+
+  stdnse.verbose(1,"Connecting to ARPS service")
+  stdnse.debug(1,"Connecting to ARPS service: " .. host.ip .. ":" .. port.number)
+  local arps_commands = {"ADDUSER", "COMMANDS", "DELUSER", "HELP", "LISTUSERS", "LOGON", "MOTD", "SHELLCMD", "VERSION", "PLAYING", "LISTSHOWS", "CHANGESHOW"}
+  local command = stdnse.get_script_args(SCRIPT_NAME .. '.command') or nil
+  if command then arps_commands = {command} end
+  for i=1, #arps_commands do
+    local sock = nmap.new_socket()
+    ...
+  end
+```
+
+Next we need to change the `-- Send 'VERSION'` to XOR the command with 0x31, prepend 0x80 and and 0x04 (the sequence) and send it
+
+# Remove the line `status, err = sock:send(stdnse.fromhex("800447544342585e5f"))` and replace it with the following:
+
+```lua
+      -- Convert string to string XOR with 0x31
+      local v = ''
+      for j=1, #arps_commands[j] do
+        local byte = string.byte(arps_commands[j],i)
+        local encrypt = byte ~ 0x31
+        v = v .. encrypt
+      end
+      status, err = sock:send("\x80\x04"..v)
+```
+
+We then need to decode the response from the ARPS server:
+
+# Change the line `local version = string.sub(bytes,16)` to `local version = string.sub(bytes,3)` this skips the header and sequence byte
+
+So far we've got a loop that loops through each command, but now we need to tell nmap about the results. We do this using tables.
+
+# Near the begining of the action section add `local results = stdnse.output_table()` this initializes a table we can use
+# We can remove the lines `-- Setting the port version` ,`port.version.version = v`, and `nmap.set_port_version(host,port)` because we don't need them
+# Replace the lines you just removed with `results[arps_commands[i]] = v` this assigns the nmap output table with the reply from the ARPS server for each command we send
+# Finally at the bottom of the action section, instead of an empty `return`, we need to change it to return our table: `return results`
+
+Having that verbose message there is annoying, we can make users require `-vv` to have it show up
+
+# change the line `stdnse.verbose(1,"Connecting to ARPS service")` to `stdnse.verbose(2,"Connecting to ARPS service")`
+
+After you've made these changes your script should look something like this:
+
+```lua
+-- Script to get ARPS version
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+
+-- Make sure you fill out someport and someservice properly
+portrule = shortport.port_or_service(31337, "arps")
+
+action = function(host, port)
+  -- Add a verbose and debug message here letting users know
+  -- The debug/verbose lib is stdnse
+
+  stdnse.verbose(2,"Connecting to ARPS service")
+  stdnse.debug(1,"Connecting to ARPS service: " .. host.ip .. ":" .. port.number)
+
+  local results = stdnse.output_table()
+  local arps_commands = {"ADDUSER", "COMMANDS", "DELUSER", "HELP", "LISTUSERS", "LOGON", "MOTD", "SHELLCMD", "VERSION", "PLAYING", "LISTSHOWS", "CHANGESHOW"}
+  local command = stdnse.get_script_args(SCRIPT_NAME .. '.command') or nil
+  if command then arps_commands = {command} end
+  for i=1, #arps_commands do
+    local sock = nmap.new_socket()
+    local status, err = sock:connect(host, port, "tcp")
+    if not status then
+      stdnse.debug("Error connecting")
+      return false, err
+    end
+
+    status, bytes = sock:receive()
+    if not status then return false, bytes end
+    
+    if bytes == stdnse.fromhex("80017c7462626678657965797473746265") then
+      -- Send handshake response
+      status, err = sock:send(stdnse.fromhex("80027578747d787a7465797463746265"))
+      if not status then return false, err end
+
+      -- Get the initial screen
+      status, bytes = sock:receive()
+      if not status then return false, bytes end
+
+      -- Convert string to string XOR with 0x31
+      local v = ''
+      for j=1, #arps_commands[i] do
+        local byte = string.byte(arps_commands[i],j)
+        local encrypt = byte ~ 0x31
+        v = v .. string.char(encrypt)
+      end
+      status, err = sock:send("\x80\x04"..v)
+      if not status then return false, err end
+
+      -- Get version info
+      status, bytes = sock:receive()
+      if not status then return false, bytes end
+
+      -- unXOR the return
+      local version = string.sub(bytes,3)
+      local v = ''
+      for i=1, #version do
+        local byte = string.byte(version,i)
+        local decrypt = byte ~ 0x31
+        v = v .. string.char(decrypt)
+      end
+      
+      results[arps_commands[i]] = v
+
+    end
+
+    sock:close()
+  end
+  return results
+end
+```
+
+Run our new nmap script:
+
+# Make sure the script we just wrote is in the `~/Labs` folder
+# Make sure you're current working directory is `~/Labs`: `cd ~/Labs`
+# Run nmap with our new script: `./nmap/nmap -p 31337 -sV --script arps-command-enum localhost`
+# Run the script with only one command: `./nmap/nmap -p 31337 -sV --script arps-command-enum --script-args "arps-command-enum.command=VERSION" localhost`

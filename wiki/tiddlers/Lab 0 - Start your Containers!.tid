@@ -1,0 +1,12 @@
+created: 20230802004314268
+modified: 20230802004354418
+tags: 
+title: Lab 0 - Start your Containers!
+
+Welcome to the DEFCON 31 Nmap workshop! 
+
+Before we get started you need to have a copy of the class VM (or a suitable linux install with the ability to build Nmap from source and edit LUA scripts). 
+
+# Open a terminal (pressing the windows key or the apple command key will bring up a search where you can type 'terminal' or just click on the terminal icon at the bottom of the screen)
+# Make sure you're in your home folder: `cd ~`
+# Run the run me script to download the necessary stuff for class: `./runme_first.sh`

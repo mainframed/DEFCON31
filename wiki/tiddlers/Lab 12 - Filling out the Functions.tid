@@ -1,0 +1,237 @@
+created: 20230802034036599
+modified: 20230802040521909
+tags: 
+title: Lab 12 - Filling out the Functions
+
+! Purpose
+
+Completing the Nmap script ARPS library
+
+! Steps
+
+Now we need to fill in the rest of the functions:
+
+!!! `increment_sequence`:
+
+this is an easy one, just add `self.seq = self.seq + 2` to the function (between function and end). Why do we use two here? Because when the server sends data it increments by one, then we increment before sending the packet. We could try and extract the sequence from the sent data each time but this works just as well and is simpler. 
+
+!!! `xor`:
+
+This is exactly the same as our for loops in the previous scripts, we just need to add a return. 
+
+Add the following to this function:
+
+```lua
+local v = ''
+for i=1, #data do
+  local byte = string.byte(data,i)
+  local encrypt = byte ~ self.KEY
+  v = v .. string.char(encrypt)
+end
+return v
+```
+
+!!! `send_data`:
+
+For this function we need to:
+
+# encode the data
+# increment the sequence byte
+# prepend the header and sequence bytes
+
+```lua
+-- Encode the data
+local d = self:xor(data)
+
+-- Increment sequence
+self:increment_sequence()
+
+-- send it
+local status, err = self.socket:send(self.HEADER .. string.char(self.seq) .. d)
+if not status then
+  stdnse.debug("Error Sending data: " .. err)
+end
+return status
+```
+
+!!! `get_data`:
+
+For this function we need to:
+
+# strip the first two bytes
+# return the decoded data
+
+We can do in a few lines:
+
+```lua
+status, data = self.socket:receive()
+if not status then
+  stdnse.debug("Error Receiving data: " .. data)
+end
+return self:xor( string.sub(data,3) )
+```
+!!! `send_command`:
+
+For this function we need to: 
+
+# Send the command
+# return the response
+
+```lua
+local status = self:send_data(command)
+if not status then
+  stdnse.debug("Error sending command: " .. command)
+end
+return self:get_data()
+```
+
+!!! `logon`:
+
+For this function we need to: 
+
+# Send the logon command with the username and password
+# return the response
+
+```lua
+local status = self:send_data("LOGON ".. username .. "/" .. password)
+
+if not status then
+  stdnse.debug("Error with LOGON command: ")
+end
+return self:get_data()
+```
+
+
+With all these functions complete your library should look something like this:
+
+
+```lua
+---
+-- Library methods for handling ARPS, creating and parsing packets.
+--
+-- @author <your name>
+-- @copyright Same as Nmap--See https://nmap.org/book/man-legal.html
+--
+-- Summary
+-- Implements an ARPS/DC31 object
+--
+-- <code>
+-- local arps = ARPS:new()
+-- status, err = arps:initiate(host, port)
+-- status, reply = arps:send_command("version")
+-- status, reply = arps:logon("version")
+-- </code>
+
+-- Created <date> - v0.1
+
+local nmap = require "nmap"
+local stdnse = require "stdnse"
+local string = require "string"
+local table = require "table"
+_ENV = stdnse.module("arps", stdnse.seeall)
+
+ARPS = {
+    KEY    = 0x31,
+    HEADER = stdnse.fromhex("80"),
+
+    -- This is our new class function
+    new = function(self, socket)
+        local o = {
+         socket = socket or nmap.new_socket(),
+         seq = 2,
+        }
+        setmetatable(o, self)
+        self.__index = self
+        return o
+    end,
+
+    --- Initiate a Connection to a ARPS Server
+    -- @param host The nmap host passed to the action section
+    -- @param port The nmap port passed to the action section
+    -- @return status, bytes/error Returns the results, true or false, and also the bytes received or the error message
+
+    initiate = function(self, host, port)
+      local status, err = self.socket:connect(host, port, "tcp")
+      if not status then
+        stdnse.debug("Error connecting")
+        return false, err
+      end
+
+      status, bytes = self.socket:receive()
+      if not status then return false, bytes end
+      
+      if bytes == stdnse.fromhex("80017c7462626678657965797473746265") then
+        -- Send handshake response
+        status, err = self.socket:send(stdnse.fromhex("80027578747d787a7465797463746265"))
+        if not status then return false, err end
+
+        -- Get the initial screen
+        status, bytes = self.socket:receive()
+        if not status then return false, bytes end
+      end
+      return status, bytes
+    end,
+
+    disconnect = function(self)
+      if self.socket then self.socket:close() end
+
+      self.seq = 2
+      return
+    end,
+
+    increment_sequence = function(self)
+      self.seq = self.seq + 2
+    end,
+
+    send_data = function(self, data)
+      -- Encode the data
+      local d = self:xor(data)
+
+      -- Increment sequence
+      self:increment_sequence()
+
+      -- send it
+      local status, err = self.socket:send(self.HEADER .. string.char(self.seq) .. d)
+      if not status then
+        stdnse.debug("Error Sending data: " .. err)
+      end
+      return status
+    end,
+
+    get_data = function(self)
+      status, data = self.socket:receive()
+      if not status then
+        stdnse.debug("Error Receiving data: " .. data)
+      end
+      return self:xor( string.sub(data,3) )
+    end,
+
+    xor = function(self, data)
+      local v = ''
+      for i=1, #data do
+        local byte = string.byte(data,i)
+        local encrypt = byte ~ self.KEY
+        v = v .. string.char(encrypt)
+      end
+      return v
+    end,
+
+    send_command = function(self, command)
+      local status = self:send_data(command)
+      if not status then
+        stdnse.debug("Error sending command: " .. command)
+      end
+      return self:get_data()
+    end,
+
+    logon = function(self, username, password)
+      local status = self:send_data("LOGON ".. username .. "/" .. password)
+      if not status then
+        stdnse.debug("Error with LOGON command: ")
+      end
+      return self:get_data()
+    end,
+}
+
+return _ENV
+```

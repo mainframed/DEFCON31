@@ -1,0 +1,71 @@
+created: 20230802005456784
+modified: 20230802040929889
+tags: 
+title: Lab 7 - Connecting to ARPS
+
+! Purpose
+
+Before we start writing Nmap scripts for it we should explore the app we're going to use for the remainder of the class. 
+
+! Steps
+
+# Make sure you're in the `~/Labs` folder
+# Make the file `client` executable: `chmod +x client`
+# Run the client: `./client`
+
+You should be presented with this screen (if not put your hand up): <span>
+
+```
+Connecting to: 127.0.0.1 31337
+Handshake successful
+ENTERING ARPS 331
+     _____   _____   __ __ 
+    |     | |_   _| |  |  |
+    |  |  |   | |   |  |  |
+    |_____|   |_|    \___/ 
+                   
+       _
+      / \
+     / _ \    utomated          -----------------------------------------
+    / ___ \                     -                                       -
+  _/ /   \ \_                   - WARNING WARNING WARNING WARNING WARNI -
+ |____|_|____|                  - NG WARNING WARNING WARNING WARNING WA -
+   ______                       -                                       -
+  |_   __ \                     -                                       -
+    | |__) |                    -   This systems is currently:          -
+    |  __ /   ecording          -                 ON-AIR                -
+   _| |  \ \_                   -                                       -
+  |____|_|___|                  -          Make changes to              -
+   ______                       -          the Schedule first.          -
+  |_   __ \                     -                                       -
+    | |__) |  layback           -          Only Use this System         -
+    |  ___/                     -          for EMERGENCIES              -
+   _| |_                        -                                       -
+  |_____|_                      -                                       -
+    _____                       -                                       -
+  .' ____ \                     - RNING WARNING WARNING WARNING WARNING -
+  | (___ \_|                    - WARNING WARNING WARNING WARNING WARN  -
+   _.____`.  ystem              -                                       -
+  | \____) |                    -----------------------------------------
+   \______.'
+
+Enter command (type EXIT to quit):
+```
+</span>
+
+Play around with the client a little, we don't have access but try and log on with the username fake/fake?
+
+Here's also a list of commands you may or may not be able to run without logging in, i suggest you try some:
+
+* ADDUSER
+* COMMANDS
+* DELUSER
+* HELP
+* LISTUSERS
+* LOGON
+* MOTD
+* SHELLCMD
+* VERSION
+* PLAYING
+* LISTSHOWS
+* CHANGESHOW

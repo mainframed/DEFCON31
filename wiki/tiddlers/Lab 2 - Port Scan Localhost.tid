@@ -1,0 +1,13 @@
+created: 20230802004356978
+modified: 20230802004408437
+tags: 
+title: Lab 2 - Port Scan Localhost
+
+Let's do some scan against your VM
+
+# Make sure you're in the Labs folder: `cd ~/Labs`
+# Scan localhost: `nmap localhost`
+# Scan localhost with more options: `nmap localhost -sV -oA defcon31.lab2 -vv -dd --open` 
+# You can review any of the output files by opening any of them with a text viewer
+# Scan speed: `nmap localhost -T5`
+# Turn down service scan: `nmap localhost -sV --version-intensity 1`

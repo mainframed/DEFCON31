@@ -1,0 +1,119 @@
+created: 20230802004714723
+modified: 20230802031935165
+tags: 
+title: Lab 4 - Simple Probe Script Update
+
+! Purpose
+
+In this lab you'll learn that Nmap scripts can change the results of a probe or augment changes. 
+
+We haven't introduced how the scripts work just yet. 
+
+! Steps
+
+# In a terminal make sure you're in the `~/Labs` folder: `cd ~/Labs`
+# Create a new script file called `lab4.nse`: `touch lab4.nse`
+# Open this file in VS Code (or an editor of your choice): `code lab4.nse`
+# Paste the script below:<span>
+
+```lua
+local stdnse = require "stdnse"
+local shortport = require "shortport"
+local nsedebug  = require "nsedebug"
+
+author = "Soldier of Fortran"
+license = "Same as Nmap--See http://nmap.org/book/man-legal.html"
+categories = {"version"}
+description = [[Test script for defcon31 class. 
+This script replicates the handshake for the class and gathers the proper 
+information that the probe file misses.
+]]
+
+---
+-- @usage
+-- nmap --script lab4 <target>
+-- @args none
+-- @output
+-- PORT     STATE SERVICE  VERSION
+-- 1234/tcp open  defcon31 DEFCON DUMMY PROGRAM 1.2.5
+
+
+portrule = function(host, port)
+  return port.number == 1234
+    and port.state == "open"
+    and not(shortport.port_is_excluded(port.number,port.protocol))
+end
+
+local DC_PROTOCOLS = {
+    "ssl",
+    "tcp"
+  }
+
+-- Tests for SSL
+--
+-- @param host host NSE object
+-- @param port port NSE object
+-- @return true and a socket object on connect, otherwise false and the error
+local dc_open = function(host, port)
+    for _, proto in pairs(DC_PROTOCOLS) do
+      local sock = nmap.new_socket()
+      sock:set_timeout(2000)
+      local status, err = sock:connect(host, port, proto)
+      if status then
+        DC_PROTOCOLS = {proto}
+        return true, sock
+      end
+      stdnse.debug(2,"Can't connect using %s: %s", proto, err)
+      sock:close()
+    end
+    return false, err
+  end
+
+-- The Action Section --
+action = function(host, port)
+  -- Send our handshake DE:FC:04
+  local defconchars = string.char(0xde,0xfc,0x04)
+  local status, sock = dc_open(host, port)
+  local replychars = ""
+  local version = ""
+  -- Check if it failed
+  if not status then
+    return false, sock
+  end
+
+  local status, handshake = sock:receive_bytes(3)
+  stdnse.debug("DEFCON 31 Handshake attempt")
+  if status == true and handshake == defconchars then
+    -- Now we need to reply
+    sock:send(defconchars)
+    status, replychars = sock:receive_bytes(36)
+    -- Looking for something like DEFCON DUMMY PROGRAM VX Release Y.Z
+    local i, j = string.find(replychars, "DEFCON DUMMY")
+    
+    if i == nil then
+      stdnse.debug(3, "Not a DEFCON 31 service")
+      return false, sock
+    else
+      stdnse.debug(3, "This is a DEFCON 31 service")
+      i,j = string.find(replychars,"DEFCON DUMMY PROGRAM V")
+      local x,y = string.find(replychars,"Release ")
+      version = string.sub(replychars,j+1,j+1) ..".".. string.sub(replychars,y+1,y+3)
+      stdnse.debug(3, "Version:" .. version)
+    end
+    port.version.name = "defcon31"
+    port.version.product = "DEFCON DUMMY PROGRAM"
+    port.version.version = version
+    nmap.set_port_version(host, port)
+
+  end -- End Handshake
+  sock:close()
+  return
+end
+```
+</span>
+# Save the script
+# In the terminal run an nmap scan: `./nmap/nmap -p 1234 localhost -sV` (notice the ouput)
+# In the terminal run an nmap scan: `./nmap/nmap -p 1234 localhost --script lab4`
+# In the terminal run an nmap scan: `./nmap/nmap -p 1234 localhost -sV --script lab4`
+
+Each one gives you more detail about the service

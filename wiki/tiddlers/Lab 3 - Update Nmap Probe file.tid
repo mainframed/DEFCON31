@@ -1,0 +1,44 @@
+created: 20230802004418768
+modified: 20230802031854138
+tags: 
+title: Lab 3 - Update Nmap Probe file
+
+! Purpose
+
+In this lab you'll learn how to access and update the probe file
+
+! Steps
+
+# Open the terminal app in your class VM
+# Make sure you're in the `~/Labs` folder: `cd ~/Labs`
+# Scan port 1234 with Nmap: `./nmap/nmap localhost -p 1234 -sV -dd -vv` (this will take a while)
+# Run the client: `python3 ./dummy_client.py` and notice the output
+# Open the dummy client script in VS Code: `code ./dummy_client.py` (read the code and notice the program flow)
+
+Time to make our Probe
+
+# Open the probe file: `code ~/Labs/nmap/nmap-service-probes`
+# Go down to line 16657 (this should be above a line that says NEXT PROBE)
+# Hit enter twice then paste the following :<span>
+
+```
+#############################NEXT PROBE##############################
+# First we send our 0xDEFC04
+Probe TCP dc31 q|\xde\xfc\x04|
+# Set the rarity
+rarity 9
+# We know the port is 1234
+ports 1234
+# Matches DEFCON DUMMY PROGRAM V1 Release 2.5 and extracts the version number
+match dc31 m|^\xde\xfc\x04DEFCON DUMMY PROGRAM V1 Release (\d+\.\d+)| p/DEFCON 31 Server/
+```
+</span>
+# Rerun the port scan: `./nmap/nmap localhost -p 1234 -sV` (notice this takes less time now)
+
+Congrats you just updated the probe file!
+
+!! Pro tips
+
+If you're working on a single port and trying to debug or figure things out, you can move the nmap-service-probes file, replace it with an empty probe file and only put your single probe in there for testing (this will speed up service scans as well)
+
+We're working in the `nmap` folder. If you want to make the changes global, on something like kali, then you'll need to change the nmap probe file that exists in /usr/share/nmap (or similar depending on distro)

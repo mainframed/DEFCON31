@@ -1,0 +1,16 @@
+created: 20230802004531568
+modified: 20230802031835977
+tags: 
+title: Lab 1 - Build Nmap
+
+! Purpose
+
+We only have the Nmap source, its time to build it
+
+! Steps
+
+# Make sure you're in the nmap folder: `cd ~/Labs/nmap`
+# Run the configure command: `./configure --with-liblua=included`
+# Compile nmap and ncat: `make`
+
+You should now have nmap, you can test it with `./nmap`

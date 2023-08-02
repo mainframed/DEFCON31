@@ -1,0 +1,42 @@
+created: 20230802005711017
+modified: 20230802032907602
+tags: 
+title: Lab 8 - The ARPS/DC31 Protocol
+
+! Purpose
+
+* Learning about the ARPS/DC31 protocol
+* Updating a probe file with ncat output
+
+! Steps
+
+# Go to https://defcon31.soldieroffortran.org/arps_protocol.pdf or go to the section of the class Wiki that explains the protocol: [[DC31 Protocol Specification]]
+# Read the spec and take note of the initial packets sent
+# By reading the spec we know the following:
+#* Each packet of information starts with 0x80
+#* Followed by the sequence number (always starts at 1 it appears)
+#* It XORs every byte of the content communication by 0x31
+#* The first thing it sends is `MESSWITHTHEBEST`
+
+This should be enough to write our null probe. Take a minute to figure it out on your own. 
+
+!!! Dumping the output with ncat
+
+# Run ncat on port 31337 with the hexdump argument: `./nmap/ncat/ncat -x output.hex localhost 31337`
+# Cat the hexdump: `cat output.hex`
+# Update our probe file under the null probe with this initial handshake, make sure you call the service arps, it will be important for later scripts: `code ./nmap/nmap-service-pobes`
+# Run nmap and observe the output: `./nmap/nmap -p 31337 -sV localhost`
+
+Other ways we could use to figure this out:
+
+# Using wireshark to read the initial handshake
+# Write a simple python script to connect
+# Hex dump with ncat
+
+''Running Late?''
+
+# If you didn't want to try and solve it on your own (or we're running late). Add this to line 42 in the file `./nmap/nmap-service-pobes`:
+
+```
+match arps m|^\x80\x01\x7c\x74\x62\x62\x66\x78\x65\x79\x65\x79\x74\x73\x74\x62\x65| p/Automated Recording Playback System/
+```
