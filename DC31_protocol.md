@@ -8,7 +8,7 @@ Protocol
 --------
 
 The protocol speaks TCP/IP. Every byte in every communication is encrypted by
-XORing every byte with 0x31.
+XORing every byte with 0x31 except for the header and the sequence byte.
 
 A DC31 packet can be broken down as:
 
@@ -70,13 +70,17 @@ You control who can issue which commands in the config file. Available commands 
 Users
 -----
 
-Users can log on with the **LOGON** command. 
+Users can log on with the **LOGON user/password** command. 
 
 UserIDs must follow the following rules:
 
 - UserIDs are thre characters long 
 - They must begin with an @
 - The next two characters are either a number or a letter
+
+If the username does not exist then ARPS will return `phil is not a valid USER`. If the password is invalid it will return `Invalid PASSWORD`
+
+When a user logs on succesfully they will be presented with the message: "@xx is logged on"
 
 Passwords
 ---------
