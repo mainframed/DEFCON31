@@ -18,8 +18,8 @@ In this lab you'll learn how to access and update the probe file
 Time to make our Probe
 
 # Open the probe file: `code ~/Labs/nmap/nmap-service-probes`
-# Go down to line 16657 (this should be above a line that says NEXT PROBE)
-# Hit enter twice then paste the following :<span>
+# Go down to line 16657 (this should be above a line that says NEXT PROBE) and hit enter twice
+# On line 16658 paste the following :<span>
 
 ```
 #############################NEXT PROBE##############################
@@ -33,6 +33,7 @@ ports 1234
 match dc31 m|^\xde\xfc\x04DEFCON DUMMY PROGRAM V1 Release (\d+\.\d+)| p/DEFCON 31 Server/
 ```
 </span>
+# Save your changes
 # Rerun the port scan: `./nmap/nmap localhost -p 1234 -sV` (notice this takes less time now)
 
 Congrats you just updated the probe file!

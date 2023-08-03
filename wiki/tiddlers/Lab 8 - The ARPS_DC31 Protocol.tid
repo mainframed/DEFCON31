@@ -35,7 +35,7 @@ Other ways we could use to figure this out:
 
 ''Running Late?''
 
-# If you didn't want to try and solve it on your own (or we're running late). Add this to line 42 in the file `./nmap/nmap-service-pobes`:
+# If you didn't want to try and solve it on your own (or we're running late). Add this to line 42 in the file `./nmap/nmap-service-probes`:
 
 ```
 match arps m|^\x80\x01\x7c\x74\x62\x62\x66\x78\x65\x79\x65\x79\x74\x73\x74\x62\x65| p/Automated Recording Playback System/

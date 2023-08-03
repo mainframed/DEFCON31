@@ -256,6 +256,7 @@ ARPS = {
     end,
 
     xor = function(self, data)
+    end,
 
     send_command = function(self, command)
     end,

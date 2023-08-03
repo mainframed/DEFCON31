@@ -18,12 +18,12 @@ First we need to enumerate the entire user space. With our new library this beco
 -- Script to enumerate all users
 local stdnse = require "stdnse"
 local shortport = require "shortport"
-<add the arps library here>
+<require the arps library here>
 
 portrule = shortport.port_or_service(31337, "arps")
 ```
 </span>
-# Make sure you replace `<add the arps library here>` with the library
+# Make sure you replace `<require the arps library here>` with the library
 # Next, for the class I've created an iterator that will loop through every valid user ID type, iterators are a little complex for the class but basically return a value each time the function is called, add this to the script:<span>
 
 ```lua
