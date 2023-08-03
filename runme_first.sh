@@ -119,4 +119,11 @@ else
     echo " Talk to the instructor about this error"
     echo "ERROR ERROR ERROR"
 fi
+echo "You will now be prompted for the password, it is: defcon31"
+sudo apt install lua5.4
 echo -e "${ENDCOLOR}"
+
+echo "#!/bin/bash" > restart_lab
+echo "docker kill defcon31" >> restart_lab
+echo "docker run -d --name defcon31 -p 127.0.0.1:1234:1234 -p 127.0.0.1:31337:31337 -p 127.0.0.1:8080:8080 mainframed767/defcon31:arm64" >> restart_lab
+chmod +x restart_lab
