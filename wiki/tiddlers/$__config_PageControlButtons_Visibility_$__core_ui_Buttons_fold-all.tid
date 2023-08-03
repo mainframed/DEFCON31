@@ -1,5 +1,6 @@
 created: 20230802040145388
-modified: 20230802040145388
+modified: 20230803220932326
 title: $:/config/PageControlButtons/Visibility/$:/core/ui/Buttons/fold-all
+type: text/vnd.tiddlywiki
 
-show
+hide

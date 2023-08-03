@@ -1,0 +1,18 @@
+created: 20230803214540144
+modified: 20230803221602823
+tags: $:/tags/Macro
+title: copy-code
+type: text/vnd.tiddlywiki
+
+\define copy-code(language:"" code:"" title:"" display-language:"show")
+<span class="copy-code-to-clipboard">
+<div class="copy-code-to-clipboard-code-area-title">$title$</div>
+<span class="copy-code-to-clipboard-code-area">
+<span class="copy-code-to-clipboard-language $display-language$">$language$</span>
+<span class="copy-code-to-clipboard-button">
+<$macrocall $name="copy-to-clipboard" src="""$code$""" /> 
+</span>
+<$codeblock code="""$code$""" language="$language$"/>
+</span>
+</span>
+\end

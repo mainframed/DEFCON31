@@ -1,0 +1,96 @@
+created: 20230803221740509
+modified: 20230803221826473
+tags: $:/tags/Stylesheet
+title: copy-code-stylesheet
+type: text/vnd.tiddlywiki
+
+.copy-code-to-clipboard-code-area-title {
+  background: <<color pre-background>>;
+  border: solid 1px <<color pre-border>>;
+  /*border:  solid 1px <<color tiddler-editor-border>>;*/
+  border-bottom:unset;
+  padding: 0.5em;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  font-size: 1.1em;
+}
+.copy-code-to-clipboard-code-area-title,
+.copy-code-to-clipboard-button,
+.copy-code-to-clipboard-language {
+  font-family: Consolas;
+}
+
+.copy-code-to-clipboard-code-area {
+  position: relative;
+  display: block;
+}
+
+.copy-code-to-clipboard-code-area-title:empty {
+  display: none;
+}
+
+.copy-code-to-clipboard-code-area-title:empty
+  + .copy-code-to-clipboard-code-area
+  > pre {
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  margin-top: 0.5em;
+}
+
+.copy-code-to-clipboard-code-area > pre {
+  margin-top: 0;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.copy-code-to-clipboard-button {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  pointer-events:none;
+  display: flex;
+  align-items:flex-start;
+  justify-content:flex-end;
+}
+
+.copy-code-to-clipboard-button > button, 
+.copy-code-to-clipboard-language {
+  opacity: 0.3;
+  pointer-events:all;
+}
+
+.copy-code-to-clipboard-button > button:hover {
+  transition: opacity 150ms ease-in-out;
+  opacity: 1;
+}
+
+.copy-code-to-clipboard-language {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.copy-code-to-clipboard-language.hide {
+display:none;
+}
+
+.copy-code-to-clipboard-button,
+.copy-code-to-clipboard-language {
+  padding: 5px;
+}
+
+/*hide the text*/
+
+.copy-code-to-clipboard-button {
+  font-size: 0;
+}
+
+.copy-code-to-clipboard-button > button > svg {
+  width: 20px;
+  height: auto;
+}

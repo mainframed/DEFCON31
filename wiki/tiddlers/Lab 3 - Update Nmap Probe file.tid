@@ -1,7 +1,8 @@
 created: 20230802004418768
-modified: 20230802031854138
+modified: 20230803223222081
 tags: 
 title: Lab 3 - Update Nmap Probe file
+type: text/vnd.tiddlywiki
 
 ! Purpose
 
@@ -20,8 +21,8 @@ Time to make our Probe
 # Open the probe file: `code ~/Labs/nmap/nmap-service-probes`
 # Go down to line 16657 (this should be above a line that says NEXT PROBE) and hit enter twice
 # On line 16658 paste the following :<span>
-
-```
+<<copy-code ""
+"
 #############################NEXT PROBE##############################
 # First we send our 0xDEFC04
 Probe TCP dc31 q|\xde\xfc\x04|
@@ -31,7 +32,7 @@ rarity 9
 ports 1234
 # Matches DEFCON DUMMY PROGRAM V1 Release 2.5 and extracts the version number
 match dc31 m|^\xde\xfc\x04DEFCON DUMMY PROGRAM V1 Release (\d+\.\d+)| p/DEFCON 31 Server/
-```
+">>
 </span>
 # Save your changes
 # Rerun the port scan: `./nmap/nmap localhost -p 1234 -sV` (notice this takes less time now)

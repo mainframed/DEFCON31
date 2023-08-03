@@ -1,7 +1,8 @@
 created: 20230802004714723
-modified: 20230802031935165
+modified: 20230803222628194
 tags: 
 title: Lab 4 - Simple Probe Script Update
+type: text/vnd.tiddlywiki
 
 ! Purpose
 
@@ -110,7 +111,6 @@ action = function(host, port)
   return
 end
 ```
-</span>
 # Save the script
 # In the terminal run an nmap scan: `./nmap/nmap -p 1234 localhost -sV` (notice the ouput)
 # In the terminal run an nmap scan: `./nmap/nmap -p 1234 localhost --script lab4`
